@@ -49,7 +49,7 @@ describe('bringLogin', () => {
 
 	it('maps 401 to a fixed message and never leaks the password', async () => {
 		const { ctx } = fakeThis({ statusCode: 401, body: { message: 'nope' } });
-		const error = await bringLogin.call(ctx).catch((e: Error) => e);
+		const error = (await bringLogin.call(ctx).catch((e) => e)) as Error;
 		expect(error.message).toBe('Bring login failed: invalid email or password');
 		expect(JSON.stringify(error)).not.toContain(PASSWORD);
 	});
@@ -114,7 +114,7 @@ describe('network failures', () => {
 	it('login: sanitized error without the password', async () => {
 		const { ctx, httpRequest } = fakeThis();
 		httpRequest.mockRejectedValueOnce(rawError({ data: `email=a&password=${PASSWORD}` }));
-		const error = await bringLogin.call(ctx).catch((e: Error) => e);
+		const error = (await bringLogin.call(ctx).catch((e) => e)) as Error;
 		expect(error.message).toBe('Bring request failed: EBRINGTEST');
 		expect(JSON.stringify(error)).not.toContain(PASSWORD);
 	});
@@ -123,7 +123,7 @@ describe('network failures', () => {
 		const { ctx, httpRequest } = fakeThis();
 		httpRequest.mockRejectedValueOnce(rawError({ headers: { Authorization: 'Bearer TOKEN-xyz' } }));
 		const session = { uuid: 'u', publicUuid: 'p', userLocale: 'de-DE', headers: {} };
-		const error = await bringRequest.call(ctx, session, 'GET', 'v2/x').catch((e: Error) => e);
+		const error = (await bringRequest.call(ctx, session, 'GET', 'v2/x').catch((e) => e)) as Error;
 		expect(error.message).toBe('Bring request failed: EBRINGTEST');
 		expect(JSON.stringify(error)).not.toContain('TOKEN-xyz');
 	});
