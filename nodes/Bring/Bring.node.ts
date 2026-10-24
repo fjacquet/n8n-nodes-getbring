@@ -15,7 +15,7 @@ import { itemProperties } from './descriptions/ItemDescription';
 import { listProperties } from './descriptions/ListDescription';
 import { type ItemRow, planBatches } from './items';
 import { type BringList, mapListItems, resolveListUuid } from './lists';
-import { getCatalog } from './translation';
+import { DEFAULT_LOCALE, getCatalog } from './translation';
 import { type BringSession, bringLogin, bringRequest, getListLocale } from './transport';
 
 type Lists = (BringList & { theme: string })[];
@@ -55,18 +55,21 @@ async function executeItems(
 			const op = ctx.getNodeParameter('operation', i) as string;
 			const locator = ctx.getNodeParameter('list', i) as { mode: string; value: string };
 			const listUuid = resolveListUuid(locator.mode === 'name' ? await loadLists() : [], locator);
-			const options = ctx.getNodeParameter('options', i, {}) as { translate?: boolean };
+			const { translate = true } = ctx.getNodeParameter('options', i, {}) as {
+				translate?: boolean;
+			};
 			rows.push({
 				index: i,
 				listUuid,
-				locale: await loadLocale(listUuid),
+				// the locale is unused when not translating, so skip the settings request
+				locale: translate ? await loadLocale(listUuid) : DEFAULT_LOCALE,
 				input: {
 					name: String(ctx.getNodeParameter('itemName', i) ?? ''),
 					specification: String(ctx.getNodeParameter('specification', i, '') ?? ''),
 					uuid: op === 'add' ? undefined : (ctx.getNodeParameter('itemUuid', i, '') as string),
 				},
 				operation: ITEM_OPERATIONS[op],
-				translate: options.translate ?? true,
+				translate,
 			});
 		} catch (error) {
 			failures.set(i, error as Error);
@@ -81,6 +84,7 @@ async function executeItems(
 	}
 
 	// Lists are written one after another: if a later list's PUT fails without continueOnFail, earlier lists stay written.
+	const names = new Map(rows.map((r) => [r.index, r.input.name.trim()]));
 	const results = new Map<number, INodeExecutionData>();
 	for (const [listUuid, group] of batches) {
 		try {
@@ -101,7 +105,7 @@ async function executeItems(
 				json: {
 					...items[index].json,
 					key: change.itemId,
-					name: String(ctx.getNodeParameter('itemName', index) ?? '').trim(),
+					name: names.get(index),
 					specification: change.spec,
 					uuid: change.uuid,
 					listUuid,
@@ -237,11 +241,7 @@ export class Bring implements INodeType {
 						'GET',
 						`v2/bringlists/${listUuid}`,
 					)) as Parameters<typeof mapListItems>[0];
-					let locale = locales.get(listUuid);
-					if (locale === undefined) {
-						locale = await getListLocale.call(this, await getSession(), listUuid);
-						locales.set(listUuid, locale);
-					}
+					const locale = await loadLocale(listUuid);
 					const includeRecently = this.getNodeParameter('includeRecently', i, false) as boolean;
 					for (const row of mapListItems(response, locale, listUuid, includeRecently)) {
 						out.push({ json: row, pairedItem });

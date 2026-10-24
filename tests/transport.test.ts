@@ -67,6 +67,15 @@ describe('bringLogin', () => {
 	});
 });
 
+describe('bringLogin without userLocale', () => {
+	it('falls back to the default locale instead of throwing', async () => {
+		const { ctx } = fakeThis(ok(login), ok({}));
+		const session = await bringLogin.call(ctx);
+		expect(session.userLocale).toBe('de-DE');
+		expect(session.headers['X-BRING-COUNTRY']).toBe('');
+	});
+});
+
 describe('bringRequest', () => {
 	const session = { uuid: 'u', publicUuid: 'p', userLocale: 'de-DE', headers: { A: 'b' } };
 
@@ -99,6 +108,26 @@ describe('getListLocale', () => {
 		expect(httpRequest.mock.calls[0][0].url).toBe(
 			'https://api.getbring.com/rest/bringusersettings/u',
 		);
+	});
+
+	it('falls back to the user locale when a list has no usersettings', async () => {
+		const { ctx } = fakeThis(ok({ userlistsettings: [{ listUuid: 'l' }] }));
+		expect(await getListLocale.call(ctx, session, 'l')).toBe('fr-CH');
+	});
+
+	it.each([
+		['en-IE', 'en-US'],
+		['fr-BE', 'fr-FR'],
+		['xx-XX', 'de-CH'],
+	])('maps the unsupported list language %s to %s', async (value, expected) => {
+		const { ctx } = fakeThis(
+			ok({
+				userlistsettings: [
+					{ listUuid: 'l', usersettings: [{ key: 'listArticleLanguage', value }] },
+				],
+			}),
+		);
+		expect(await getListLocale.call(ctx, session, 'l')).toBe(expected);
 	});
 
 	it('falls back to the user locale for an unknown list', async () => {

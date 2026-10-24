@@ -7,7 +7,7 @@ import type {
 	JsonObject,
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
-import { mapUserLocale } from './translation';
+import { DEFAULT_LOCALE, mapUserLocale } from './translation';
 
 type Ctx = IExecuteFunctions | ILoadOptionsFunctions;
 
@@ -93,9 +93,12 @@ export async function bringLogin(this: Ctx): Promise<BringSession> {
 		},
 	};
 	const account = (await bringRequest.call(this, session, 'GET', `v2/bringusers/${auth.uuid}`)) as {
-		userLocale: { language: string; country: string };
+		userLocale?: { language: string; country: string };
 	};
-	const { language, country } = account.userLocale;
+	const { language, country } = account.userLocale ?? {
+		language: DEFAULT_LOCALE.split('-')[0],
+		country: '',
+	};
 	session.headers['X-BRING-COUNTRY'] = country;
 	session.userLocale = mapUserLocale(language, country);
 	return session;
@@ -128,10 +131,12 @@ export async function getListLocale(
 		'GET',
 		`bringusersettings/${session.uuid}`,
 	)) as {
-		userlistsettings?: { listUuid: string; usersettings: { key: string; value: string }[] }[];
+		userlistsettings?: { listUuid: string; usersettings?: { key: string; value: string }[] }[];
 	};
 	const list = settings.userlistsettings?.find((l) => l.listUuid === listUuid);
-	return (
-		list?.usersettings.find((s) => s.key === 'listArticleLanguage')?.value ?? session.userLocale
-	);
+	const value = list?.usersettings?.find((s) => s.key === 'listArticleLanguage')?.value;
+	if (!value) return session.userLocale;
+	// Same language fallback as the account locale, so e.g. en-IE does not throw later.
+	const [language, country = ''] = value.split('-');
+	return mapUserLocale(language, country);
 }

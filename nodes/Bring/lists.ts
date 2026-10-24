@@ -10,6 +10,7 @@ export function resolveListUuid(
 	lists: BringList[],
 	locator: { mode: string; value: string },
 ): string {
+	if (!locator.value?.trim()) throw new Error('List is required');
 	if (locator.mode !== 'name') return locator.value;
 	const hits = lists.filter((l) => l.name === locator.value);
 	if (hits.length === 0) throw new Error(`Bring list "${locator.value}" not found`);

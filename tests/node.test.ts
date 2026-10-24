@@ -45,6 +45,10 @@ const fakeContext = (
 				return { userLocale: { language: 'en', country: 'US' } };
 			if (opts.url.endsWith('/bringusers/u/lists')) return LISTS;
 			if (opts.url.endsWith('/bringusersettings/u')) return settings;
+			if (opts.method === 'GET' && opts.url.endsWith('/v2/bringlists/list-1'))
+				return {
+					items: { purchase: [{ uuid: 'x', specification: '', itemId: 'Zwiebeln' }], recently: [] },
+				};
 			return {};
 		})();
 		return { statusCode: 200, body };
@@ -119,6 +123,29 @@ describe('Bring.execute item', () => {
 		const { context } = fakeContext([{ itemName: '  Oignons ' }]);
 		const [out] = await new Bring().execute.call(context);
 		expect(out[0].json.name).toBe('Oignons');
+	});
+
+	it('does not fetch user settings when translate is off', async () => {
+		const { context, httpRequest } = fakeContext([
+			{ itemName: 'Milk', options: { translate: false } },
+		]);
+		await new Bring().execute.call(context);
+		expect(httpRequest.mock.calls.some(([o]) => o.url.includes('bringusersettings'))).toBe(false);
+	});
+
+	it('reads itemName once per item', async () => {
+		const { context } = fakeContext([{ itemName: 'Milk' }]);
+		const spy = vi.spyOn(context, 'getNodeParameter');
+		await new Bring().execute.call(context);
+		expect(spy.mock.calls.filter(([name]) => name === 'itemName')).toHaveLength(1);
+	});
+
+	it('fails with List is required on a blank list id', async () => {
+		const { context, puts } = fakeContext([{ itemName: 'Milk', list: { mode: 'id', value: '' } }]);
+		const error = await new Bring().execute.call(context).catch((e) => e);
+		expect(error).toBeInstanceOf(NodeOperationError);
+		expect(error.message).toContain('List is required');
+		expect(puts()).toHaveLength(0);
 	});
 
 	it('sends TO_RECENTLY when completing', async () => {
@@ -234,29 +261,25 @@ describe('Bring.execute login failure', () => {
 	});
 });
 
-describe('Bring.execute catalog unsupported language', () => {
-	it('throws a NodeOperationError when the list language has no catalog', async () => {
+describe('Bring.execute unsupported list language', () => {
+	const settings = {
+		userlistsettings: [
+			{ listUuid: 'list-1', usersettings: [{ key: 'listArticleLanguage', value: 'en-IE' }] },
+		],
+	};
+
+	it('catalog falls back by language', async () => {
 		const { context } = fakeContext(
-			[
-				{
-					resource: 'catalog',
-					operation: 'get',
-					localeSource: 'list',
-					list: { mode: 'id', value: 'list-1' },
-				},
-			],
-			{
-				settings: {
-					userlistsettings: [
-						{ listUuid: 'list-1', usersettings: [{ key: 'listArticleLanguage', value: 'xx-XX' }] },
-					],
-				},
-			},
+			[{ resource: 'catalog', operation: 'get', localeSource: 'list' }],
+			{ settings },
 		);
+		const [out] = await new Bring().execute.call(context);
+		expect(out.every((o) => o.json.locale === 'en-US')).toBe(true);
+	});
 
-		const error = await new Bring().execute.call(context).catch((e) => e);
-
-		expect(error).toBeInstanceOf(NodeOperationError);
-		expect(error.message).toContain('xx-XX');
+	it('getItems does not throw', async () => {
+		const { context } = fakeContext([{ resource: 'list', operation: 'getItems' }], { settings });
+		const [out] = await new Bring().execute.call(context);
+		expect(out).toHaveLength(1);
 	});
 });

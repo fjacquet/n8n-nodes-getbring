@@ -11,6 +11,9 @@ describe('resolveListUuid', () => {
 	it('passes an id through untouched', () => {
 		expect(resolveListUuid(lists, { mode: 'id', value: 'anything' })).toBe('anything');
 	});
+	it.each(['id', 'name'])('throws "List is required" for a blank %s', (mode) => {
+		expect(() => resolveListUuid(lists, { mode, value: '  ' })).toThrow('List is required');
+	});
 	it('resolves a name to its uuid', () => {
 		expect(resolveListUuid(lists, { mode: 'name', value: 'Maison' })).toBe('u-1');
 	});
