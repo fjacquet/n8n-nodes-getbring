@@ -83,12 +83,14 @@ export function mapUserLocale(language: string, country: string): string {
 export function toKey(name: string, locale: string): string {
 	const input = name.trim();
 	if (locale === DEFAULT_LOCALE) return input;
-	const entries = Object.entries(getCatalog(locale));
+	// reversed: duplicate display names resolve to the LAST key, like bring-api's {value: key} inversion
+	const entries = Object.entries(getCatalog(locale)).reverse();
 	const exact = entries.find(([, display]) => display === input);
 	if (exact) return exact[0];
 	const lower = input.toLowerCase();
 	const byName = entries.find(([, display]) => display.toLowerCase() === lower);
 	if (byName) return byName[0];
+	// key match comes after display-name match to mirror bring-api
 	const byKey = entries.find(([key]) => key.toLowerCase() === lower);
 	return byKey ? byKey[0] : input;
 }

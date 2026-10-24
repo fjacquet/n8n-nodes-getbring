@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCatalog, mapUserLocale, toKey, toName } from '../nodes/Bring/translation';
+import { SUPPORTED_LOCALES, getCatalog, mapUserLocale, toKey, toName } from '../nodes/Bring/translation';
 
 describe('toKey', () => {
 	it.each([
@@ -8,6 +8,9 @@ describe('toKey', () => {
 		["Huile d'olive", 'fr-CH', 'Olivenöl'],
 		['Zwiebeln', 'fr-CH', 'Zwiebeln'],
 		['zwiebeln', 'fr-CH', 'Zwiebeln'],
+		['Boissons', 'fr-CH', 'Getränke & Tabak'], // duplicate display name: last key wins like bring-api
+		['Raisins', 'fr-CH', 'Rosinen'],
+		['boissons', 'fr-CH', 'Getränke & Tabak'],
 		['Oignon', 'fr-CH', 'Oignon'], // no fuzzy match
 		['Oignons', 'de-CH', 'Oignons'], // default locale: untouched
 	])('toKey(%j, %s) = %s', (name, locale, key) => {
@@ -32,4 +35,11 @@ describe('mapUserLocale', () => {
 describe('getCatalog', () => {
 	it('loads fr-CH with 385 entries', () => expect(Object.keys(getCatalog('fr-CH')).length).toBe(385));
 	it('throws for unsupported locale', () => expect(() => getCatalog('fr-BE')).toThrow());
+});
+
+describe('SUPPORTED_LOCALES', () => {
+	it('has 20 locales, each loadable', () => {
+		expect(SUPPORTED_LOCALES.length).toBe(20);
+		for (const l of SUPPORTED_LOCALES) expect(Object.keys(getCatalog(l)).length).toBeGreaterThan(0);
+	});
 });
