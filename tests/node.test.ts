@@ -24,16 +24,20 @@ const fakeContext = (
 		listName,
 		failPutFor,
 		settings = { userlistsettings: [] },
+		loginStatus = 200,
 	}: {
 		continueOnFail?: boolean;
 		listName?: string;
 		failPutFor?: string;
 		settings?: unknown;
+		loginStatus?: number;
 	} = {},
 ) => {
 	const httpRequest = vi.fn(async (opts: { method: string; url: string }) => {
 		if (opts.method === 'PUT' && failPutFor && opts.url.includes(failPutFor))
 			return { statusCode: 500, body: { message: 'boom' } };
+		if (opts.url.endsWith('/v2/bringauth') && loginStatus !== 200)
+			return { statusCode: loginStatus, body: { message: 'bad credentials' } };
 		const body = (() => {
 			if (opts.url.endsWith('/v2/bringauth'))
 				return { uuid: 'u', publicUuid: 'p', token_type: 'Bearer', access_token: 't' };
@@ -185,5 +189,52 @@ describe('Bring.execute catalog', () => {
 		expect(
 			httpRequest.mock.calls.map(([o]) => o.url).some((u) => u.endsWith('/v2/bringauth')),
 		).toBe(true);
+	});
+});
+
+describe('Bring.execute login failure', () => {
+	it('logs in once and reports the error on every item with continueOnFail', async () => {
+		const { context, httpRequest } = fakeContext(
+			[
+				{ resource: 'list', operation: 'getAll' },
+				{ resource: 'list', operation: 'getAll' },
+				{ resource: 'list', operation: 'getAll' },
+			],
+			{ continueOnFail: true, loginStatus: 401 },
+		);
+
+		const [out] = await new Bring().execute.call(context);
+
+		expect(httpRequest).toHaveBeenCalledTimes(1);
+		expect(out).toHaveLength(3);
+		expect(out.every((o) => typeof o.json.error === 'string')).toBe(true);
+		expect(out.map((o) => o.pairedItem)).toEqual([{ item: 0 }, { item: 1 }, { item: 2 }]);
+	});
+});
+
+describe('Bring.execute catalog unsupported language', () => {
+	it('throws a NodeOperationError when the list language has no catalog', async () => {
+		const { context } = fakeContext(
+			[
+				{
+					resource: 'catalog',
+					operation: 'get',
+					localeSource: 'list',
+					list: { mode: 'id', value: 'list-1' },
+				},
+			],
+			{
+				settings: {
+					userlistsettings: [
+						{ listUuid: 'list-1', usersettings: [{ key: 'listArticleLanguage', value: 'xx-XX' }] },
+					],
+				},
+			},
+		);
+
+		const error = await new Bring().execute.call(context).catch((e) => e);
+
+		expect(error).toBeInstanceOf(NodeOperationError);
+		expect(error.message).toContain('xx-XX');
 	});
 });

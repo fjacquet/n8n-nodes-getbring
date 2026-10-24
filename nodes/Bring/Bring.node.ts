@@ -174,10 +174,11 @@ export class Bring implements INodeType {
 		const items = this.getInputData();
 		const out: INodeExecutionData[] = [];
 		// Login is lazy: a catalog with a fixed locale needs no account.
-		let session: BringSession | undefined;
-		const getSession = async () => {
-			session ??= await bringLogin.call(this);
-			return session;
+		// The promise is memoized, failed or not: bad credentials are tried once per execution.
+		let sessionPromise: Promise<BringSession> | undefined;
+		const getSession = () => {
+			sessionPromise ??= bringLogin.call(this);
+			return sessionPromise;
 		};
 		let lists: Lists | undefined;
 		const locales = new Map<string, string>();
