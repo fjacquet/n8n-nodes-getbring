@@ -45,7 +45,7 @@ describe('buildChange', () => {
 		expect(c.uuid).toBe('abc');
 	});
 
-	it('leaves uuid empty for non-purchase operations without uuid', () => {
+	it('omits uuid for non-purchase operations without uuid', () => {
 		const c = buildChange(
 			{ name: 'Oignons', specification: '' },
 			'REMOVE',
@@ -53,7 +53,7 @@ describe('buildChange', () => {
 			true,
 			() => 'x',
 		);
-		expect(c.uuid).toBe('');
+		expect(c).not.toHaveProperty('uuid');
 	});
 
 	it('rejects an empty name', () => {

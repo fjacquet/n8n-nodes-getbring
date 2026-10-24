@@ -18,9 +18,15 @@ const LISTS = {
 
 const fakeContext = (
 	inputs: Record<string, unknown>[],
-	{ continueOnFail = false, listName }: { continueOnFail?: boolean; listName?: string } = {},
+	{
+		continueOnFail = false,
+		listName,
+		failPutFor,
+	}: { continueOnFail?: boolean; listName?: string; failPutFor?: string } = {},
 ) => {
 	const httpRequest = vi.fn(async (opts: { method: string; url: string }) => {
+		if (opts.method === 'PUT' && failPutFor && opts.url.includes(failPutFor))
+			return { statusCode: 500, body: { message: 'boom' } };
 		const body = (() => {
 			if (opts.url.endsWith('/v2/bringauth'))
 				return { uuid: 'u', publicUuid: 'p', token_type: 'Bearer', access_token: 't' };
@@ -95,5 +101,41 @@ describe('Bring.execute item', () => {
 		expect(error).toBeInstanceOf(NodeOperationError);
 		expect(error.message).toContain('Nope');
 		expect(puts()).toHaveLength(0);
+	});
+
+	it('returns the trimmed name that was sent', async () => {
+		const { context } = fakeContext([{ itemName: '  Oignons ' }]);
+		const [out] = await new Bring().execute.call(context);
+		expect(out[0].json.name).toBe('Oignons');
+	});
+
+	it('sends no uuid when removing without one', async () => {
+		const { context, puts } = fakeContext([{ operation: 'remove', itemName: 'Milk' }]);
+		const [out] = await new Bring().execute.call(context);
+		const change = (puts()[0] as unknown as { body: { changes: object[] } }).body.changes[0];
+		expect(change).not.toHaveProperty('uuid');
+		expect(out[0].json.uuid).toBeUndefined();
+	});
+
+	describe('when the PUT of the second list fails', () => {
+		const inputs = [
+			{ itemName: 'Milk', list: { mode: 'id', value: 'list-a' } },
+			{ itemName: 'Eggs', list: { mode: 'id', value: 'list-b' } },
+			{ itemName: 'Bread', list: { mode: 'id', value: 'list-a' } },
+		];
+
+		it('with continueOnFail errors only that list, keeping input order', async () => {
+			const { context } = fakeContext(inputs, { continueOnFail: true, failPutFor: 'list-b' });
+			const [out] = await new Bring().execute.call(context);
+			expect(out.map((o) => o.pairedItem)).toEqual([{ item: 0 }, { item: 1 }, { item: 2 }]);
+			expect(out[0].json).toMatchObject({ name: 'Milk', listUuid: 'list-a' });
+			expect(out[1].json).toEqual({ error: 'boom' });
+			expect(out[2].json).toMatchObject({ name: 'Bread', listUuid: 'list-a' });
+		});
+
+		it('without continueOnFail throws', async () => {
+			const { context } = fakeContext(inputs, { failPutFor: 'list-b' });
+			await expect(new Bring().execute.call(context)).rejects.toThrow('boom');
+		});
 	});
 });

@@ -77,6 +77,7 @@ async function executeItems(
 		throw fail(ctx, failures.get(first) as Error, first);
 	}
 
+	// Lists are written one after another: if a later list's PUT fails without continueOnFail, earlier lists stay written.
 	const results = new Map<number, INodeExecutionData>();
 	for (const [listUuid, group] of batches) {
 		try {
@@ -97,7 +98,7 @@ async function executeItems(
 				json: {
 					...items[index].json,
 					key: change.itemId,
-					name: ctx.getNodeParameter('itemName', index) as string,
+					name: (ctx.getNodeParameter('itemName', index) as string).trim(),
 					specification: change.spec,
 					uuid: change.uuid,
 					listUuid,

@@ -1,3 +1,4 @@
+// Ports Bring.batch_update_list (bring-api): one change set per list.
 import { randomUUID } from 'node:crypto';
 import { type BringChange, type BringOperation, buildChange, type ItemInput } from './batch';
 

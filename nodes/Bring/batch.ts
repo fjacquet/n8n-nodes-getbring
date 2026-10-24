@@ -1,3 +1,4 @@
+// Ports Bring.batch_update_list (bring-api): change and body construction.
 import { toKey } from './translation';
 
 export type BringOperation = 'TO_PURCHASE' | 'TO_RECENTLY' | 'REMOVE';
@@ -11,7 +12,7 @@ export interface ItemInput {
 export interface BringChange {
 	itemId: string;
 	spec: string;
-	uuid: string;
+	uuid?: string;
 	operation: BringOperation;
 	accuracy: '0.0';
 	altitude: '0.0';
@@ -31,8 +32,8 @@ export function buildChange(
 	return {
 		itemId: translate ? toKey(name, locale) : name,
 		spec: input.specification,
-		// Empty uuid on non-purchase ops: Bring targets the newest match by name.
-		uuid: input.uuid || (operation === 'TO_PURCHASE' ? newUuid() : ''),
+		// No uuid key on non-purchase ops (like bring-api): Bring targets the newest match by name.
+		...((input.uuid || operation === 'TO_PURCHASE') && { uuid: input.uuid || newUuid() }),
 		operation,
 		accuracy: '0.0',
 		altitude: '0.0',
