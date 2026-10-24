@@ -108,7 +108,7 @@ All input items for the same list are sent to Bring in one request.
 
 Output: one item per article, `{ "key": "Zwiebeln", "name": "Oignons", "locale": "fr-FR" }`.
 
-Use it to feed a validation step or an AI agent with the exact names Bring knows. The node can also be used as a tool by AI Agent nodes.
+Use it to feed a validation step or an AI agent with the exact names Bring knows. The node can also be used as a tool by AI Agent nodes; on self-hosted n8n set `N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true`.
 
 ### Example: Paprika shopping list to Bring
 
@@ -170,7 +170,7 @@ Get Items translates the other way: the Bring key becomes `name`, and the origin
 
 ## Error handling
 
-Errors surface as n8n node errors. A wrong password gives `Bring login failed: invalid email or password`. The response body is never echoed.
+Errors surface as n8n node errors. A wrong password gives `Bring login failed: invalid email or password`. For login errors the response body is never echoed.
 
 Use the node setting **Continue On Fail** to get `{ "error": "<message>" }` items instead of stopping the workflow.
 

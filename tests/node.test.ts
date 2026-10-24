@@ -87,7 +87,8 @@ describe('Bring.execute item', () => {
 		});
 		expect(out[1].json).toMatchObject({ name: 'Bread' });
 		expect(out[0].json.uuid).toEqual(expect.any(String));
-		expect(out[0].json.key).toEqual(expect.any(String));
+		expect(out[0].json.key).toBe('Milch');
+		expect(body.changes[0].itemId).toBe('Milch');
 		expect(out.map((o) => o.pairedItem)).toEqual([{ item: 0 }, { item: 1 }]);
 	});
 
@@ -118,6 +119,27 @@ describe('Bring.execute item', () => {
 		const { context } = fakeContext([{ itemName: '  Oignons ' }]);
 		const [out] = await new Bring().execute.call(context);
 		expect(out[0].json.name).toBe('Oignons');
+	});
+
+	it('sends TO_RECENTLY when completing', async () => {
+		const { context, puts } = fakeContext([{ operation: 'complete', itemName: 'Milk' }]);
+		await new Bring().execute.call(context);
+		const change = (puts()[0] as unknown as { body: { changes: { operation: string }[] } }).body
+			.changes[0];
+		expect(change.operation).toBe('TO_RECENTLY');
+	});
+
+	it('coerces a non-string name to an empty-name error and a numeric spec to a string', async () => {
+		const bad = fakeContext([{ itemName: 123 }, { itemName: undefined }], { continueOnFail: true });
+		const [out] = await new Bring().execute.call(bad.context);
+		expect(out[0].json.name).toBe('123');
+		expect(out[1].json).toEqual({ error: 'Item name is empty' });
+
+		const ok = fakeContext([{ itemName: 'Milk', specification: 5 }]);
+		await new Bring().execute.call(ok.context);
+		const change = (ok.puts()[0] as unknown as { body: { changes: { spec: string }[] } }).body
+			.changes[0];
+		expect(change.spec).toBe('5');
 	});
 
 	it('sends no uuid when removing without one', async () => {

@@ -27,11 +27,11 @@ export function buildChange(
 	translate: boolean,
 	newUuid: () => string,
 ): BringChange {
-	const name = input.name.trim();
+	const name = String(input.name ?? '').trim();
 	if (!name) throw new Error('Item name is empty');
 	return {
 		itemId: translate ? toKey(name, locale) : name,
-		spec: input.specification,
+		spec: String(input.specification ?? ''),
 		// No uuid key on non-purchase ops (like bring-api): Bring targets the newest match by name.
 		...((input.uuid || operation === 'TO_PURCHASE') && { uuid: input.uuid || newUuid() }),
 		operation,

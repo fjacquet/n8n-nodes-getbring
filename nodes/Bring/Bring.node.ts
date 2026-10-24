@@ -26,6 +26,7 @@ const ITEM_OPERATIONS: Record<string, BringOperation> = {
 	complete: 'TO_RECENTLY',
 };
 
+// Ports Bring.load_lists (bring-api).
 async function fetchLists(
 	ctx: IExecuteFunctions | ILoadOptionsFunctions,
 	session: BringSession,
@@ -60,8 +61,8 @@ async function executeItems(
 				listUuid,
 				locale: await loadLocale(listUuid),
 				input: {
-					name: ctx.getNodeParameter('itemName', i) as string,
-					specification: ctx.getNodeParameter('specification', i, '') as string,
+					name: String(ctx.getNodeParameter('itemName', i) ?? ''),
+					specification: String(ctx.getNodeParameter('specification', i, '') ?? ''),
 					uuid: op === 'add' ? undefined : (ctx.getNodeParameter('itemUuid', i, '') as string),
 				},
 				operation: ITEM_OPERATIONS[op],
@@ -100,7 +101,7 @@ async function executeItems(
 				json: {
 					...items[index].json,
 					key: change.itemId,
-					name: (ctx.getNodeParameter('itemName', index) as string).trim(),
+					name: String(ctx.getNodeParameter('itemName', index) ?? '').trim(),
 					specification: change.spec,
 					uuid: change.uuid,
 					listUuid,

@@ -1,3 +1,4 @@
+// Ports the to_locale item translation of Bring.get_list (bring-api).
 import { toName } from './translation';
 
 export interface BringList {

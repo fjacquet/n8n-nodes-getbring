@@ -5,7 +5,7 @@
   "categories": ["Productivity"],
   "resources": {
     "credentialDocumentation": [
-      { "url": "https://github.com/fjacquet/n8n-nodes-getbring#credentials" }
+      { "url": "https://github.com/fjacquet/n8n-nodes-getbring#credential-setup" }
     ],
     "primaryDocumentation": [{ "url": "https://github.com/fjacquet/n8n-nodes-getbring" }]
   }
