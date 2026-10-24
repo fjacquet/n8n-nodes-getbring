@@ -94,7 +94,7 @@ Parameters:
 - **Item UUID** (Remove and Complete only): target one specific item.
 - **Options → Translate Name**: on by default. See [Translation](#translation).
 
-Each input item produces one output item: your input fields plus `key`, `name`, `specification`, `uuid`, `listUuid` and `operation` (`TO_PURCHASE`, `REMOVE` or `TO_RECENTLY`).
+Each input item produces one output item: your input fields plus `key`, `name`, `specification`, `uuid`, `listUuid` and `operation` (`TO_PURCHASE`, `REMOVE` or `TO_RECENTLY`). `uuid` is always present for Add. For Remove and Complete it is present only when you gave an **Item UUID**.
 
 Add generates a UUID for each new item. Remove and Complete without an **Item UUID** act on the newest item with that name, which is how Bring resolves it. Pass the `uuid` returned by Get Items to target an exact item.
 
@@ -176,6 +176,7 @@ Use the node setting **Continue On Fail** to get `{ "error": "<message>" }` item
 
 For Item operations:
 
+- A failed login always stops the node, even with Continue On Fail, because the node signs in before it processes any item.
 - The node plans all input items before it writes anything. Without Continue On Fail, one invalid item (blank name, unknown or ambiguous list) stops the node and nothing is written.
 - With Continue On Fail, invalid items become error items and the rest of the batch is still sent.
 - Lists are written one after another. If an item sends to several lists and a later list fails, the earlier lists stay written. A failed list gives error items for its inputs only.

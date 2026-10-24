@@ -5,7 +5,7 @@ export class BringApi implements ICredentialType {
 
 	displayName = 'Bring API';
 
-	documentationUrl = 'https://github.com/fjacquet/n8n-nodes-getbring#credentials';
+	documentationUrl = 'https://github.com/fjacquet/n8n-nodes-getbring#credential-setup';
 
 	icon: Icon = {
 		light: 'file:../nodes/Bring/bring.svg',
