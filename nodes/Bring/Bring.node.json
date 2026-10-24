@@ -1,0 +1,12 @@
+{
+  "node": "@fjacquet/n8n-nodes-getbring.bring",
+  "nodeVersion": "1.0",
+  "codexVersion": "1.0",
+  "categories": ["Productivity"],
+  "resources": {
+    "credentialDocumentation": [
+      { "url": "https://github.com/fjacquet/n8n-nodes-getbring#credentials" }
+    ],
+    "primaryDocumentation": [{ "url": "https://github.com/fjacquet/n8n-nodes-getbring" }]
+  }
+}

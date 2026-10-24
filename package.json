@@ -43,7 +43,9 @@
     "credentials": [
       "dist/credentials/BringApi.credentials.js"
     ],
-    "nodes": []
+    "nodes": [
+      "dist/nodes/Bring/Bring.node.js"
+    ]
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.2",
