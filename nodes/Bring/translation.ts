@@ -66,7 +66,7 @@ export const MAP_LANG_TO_LOCALE: Readonly<Record<string, string>> = {
 };
 
 export function getCatalog(locale: string): Catalog {
-	const catalog = Object.prototype.hasOwnProperty.call(CATALOGS, locale) ? CATALOGS[locale] : undefined;
+	const catalog = Object.hasOwn(CATALOGS, locale) ? CATALOGS[locale] : undefined;
 	if (!catalog) throw new Error(`Locale ${locale} not supported by Bring.`);
 	return catalog;
 }
@@ -74,7 +74,7 @@ export function getCatalog(locale: string): Catalog {
 export function mapUserLocale(language: string, country: string): string {
 	const locale = `${language}-${country}`;
 	if (SUPPORTED_LOCALES.includes(locale)) return locale;
-	return Object.prototype.hasOwnProperty.call(MAP_LANG_TO_LOCALE, language)
+	return Object.hasOwn(MAP_LANG_TO_LOCALE, language)
 		? MAP_LANG_TO_LOCALE[language]
 		: DEFAULT_LOCALE;
 }

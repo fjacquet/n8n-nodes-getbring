@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { SUPPORTED_LOCALES, getCatalog, mapUserLocale, toKey, toName } from '../nodes/Bring/translation';
+import {
+	getCatalog,
+	mapUserLocale,
+	SUPPORTED_LOCALES,
+	toKey,
+	toName,
+} from '../nodes/Bring/translation';
 
 describe('toKey', () => {
 	it.each([
@@ -33,7 +39,8 @@ describe('mapUserLocale', () => {
 });
 
 describe('getCatalog', () => {
-	it('loads fr-CH with 385 entries', () => expect(Object.keys(getCatalog('fr-CH')).length).toBe(385));
+	it('loads fr-CH with 385 entries', () =>
+		expect(Object.keys(getCatalog('fr-CH')).length).toBe(385));
 	it('throws for unsupported locale', () => expect(() => getCatalog('fr-BE')).toThrow());
 });
 
