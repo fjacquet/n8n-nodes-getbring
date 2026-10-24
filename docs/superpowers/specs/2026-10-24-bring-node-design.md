@@ -58,7 +58,7 @@ Reprendre la logique de bring-api (`__translate`, `__locale`, `__load_article_tr
 
 ## Contraintes
 
-- Conventions nœud communautaire n8n : scaffold `@n8n/node-cli`, `n8n-node lint` vert, `npx @n8n/scan-community-package` vert, nom `n8n-nodes-getbring`, mot-clé `n8n-community-node-package`, licence MIT.
+- Conventions nœud communautaire n8n : scaffold `@n8n/node-cli`, `n8n-node lint` vert, `npx @n8n/scan-community-package` vert, nom `@fjacquet/n8n-nodes-getbring` (scope comme n8n-nodes-withings), mot-clé `n8n-community-node-package`, licence MIT.
 - **Zéro dépendance runtime** (exigence vérification) : HTTP via `this.helpers.httpRequest` / `httpRequestWithAuthentication`.
 - Erreurs : `NodeApiError` / `NodeOperationError` avec message Bring lisible ; 401 au login = message « identifiants invalides ». Supporter `continueOnFail`.
 - Jamais de mot de passe ou token dans la sortie ni dans les logs.

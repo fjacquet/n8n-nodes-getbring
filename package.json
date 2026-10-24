@@ -1,0 +1,63 @@
+{
+  "name": "@fjacquet/n8n-nodes-getbring",
+  "version": "0.1.0",
+  "description": "n8n community node for Bring! shopping lists (TypeScript port of miaucl/bring-api)",
+  "license": "MIT",
+  "homepage": "https://github.com/fjacquet/n8n-nodes-getbring",
+  "bugs": {
+    "url": "https://github.com/fjacquet/n8n-nodes-getbring/issues"
+  },
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "author": {
+    "name": "Frederic Jacquet",
+    "email": "fred@ljf.ch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fjacquet/n8n-nodes-getbring.git"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "n8n-node build",
+    "dev": "n8n-node dev",
+    "lint": "biome check . && n8n-node lint",
+    "lint:n8n": "n8n-node lint",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
+    "release": "n8n-node release",
+    "prepublishOnly": "n8n-node prerelease"
+  },
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "strict": true,
+    "credentials": [
+      "dist/credentials/BringApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Bring/Bring.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.2",
+    "@n8n/node-cli": "0.53.4",
+    "@vitest/coverage-v8": "5.0.5",
+    "eslint": "9.39.5",
+    "release-it": "21.1.1",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}
