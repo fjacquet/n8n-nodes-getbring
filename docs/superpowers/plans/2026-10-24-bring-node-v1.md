@@ -14,7 +14,7 @@
 
 ## Global Constraints
 
-- Package name `n8n-nodes-getbring`, license MIT, keyword `n8n-community-node-package`.
+- Package name `@fjacquet/n8n-nodes-getbring`, license MIT, keyword `n8n-community-node-package`.
 - Zero runtime `dependencies` in package.json; HTTP only via `this.helpers.httpRequest`.
 - `npm run lint` (n8n-node lint) and `npx @n8n/scan-community-package` must pass before release.
 - API base `https://api.getbring.com/rest/`; headers `X-BRING-API-KEY: cof4Nc6D8saplXjE3h3HXqHH8m7VU2i1Gs0g85Sp`, `X-BRING-CLIENT: android`, `X-BRING-APPLICATION: bring`, `X-BRING-COUNTRY: <userLocale.country>`, `X-BRING-USER-UUID`, `X-BRING-PUBLIC-USER-UUID`, `Authorization: <token_type> <access_token>`.
