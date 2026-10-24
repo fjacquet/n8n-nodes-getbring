@@ -10,10 +10,12 @@ import type {
 import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 import type { BringOperation } from './batch';
 import { buildBody } from './batch';
+import { catalogProperties } from './descriptions/CatalogDescription';
 import { itemProperties } from './descriptions/ItemDescription';
 import { listProperties } from './descriptions/ListDescription';
 import { type ItemRow, planBatches } from './items';
 import { type BringList, mapListItems, resolveListUuid } from './lists';
+import { getCatalog } from './translation';
 import { type BringSession, bringLogin, bringRequest, getListLocale } from './transport';
 
 type Lists = (BringList & { theme: string })[];
@@ -138,6 +140,7 @@ export class Bring implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
+					{ name: 'Catalog', value: 'catalog' },
 					{ name: 'Item', value: 'item' },
 					{ name: 'List', value: 'list' },
 				],
@@ -145,6 +148,7 @@ export class Bring implements INodeType {
 			},
 			...listProperties,
 			...itemProperties,
+			...catalogProperties,
 		],
 	};
 
@@ -169,17 +173,22 @@ export class Bring implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const out: INodeExecutionData[] = [];
-		const session = await bringLogin.call(this);
+		// Login is lazy: a catalog with a fixed locale needs no account.
+		let session: BringSession | undefined;
+		const getSession = async () => {
+			session ??= await bringLogin.call(this);
+			return session;
+		};
 		let lists: Lists | undefined;
 		const locales = new Map<string, string>();
 		const loadLists = async () => {
-			lists ??= await fetchLists(this, session);
+			lists ??= await fetchLists(this, await getSession());
 			return lists;
 		};
 		const loadLocale = async (listUuid: string) => {
 			let locale = locales.get(listUuid);
 			if (locale === undefined) {
-				locale = await getListLocale.call(this, session, listUuid);
+				locale = await getListLocale.call(this, await getSession(), listUuid);
 				locales.set(listUuid, locale);
 			}
 			return locale;
@@ -187,14 +196,27 @@ export class Bring implements INodeType {
 
 		// `resource` has noDataExpression, so it is the same for every input item.
 		if (items.length > 0 && this.getNodeParameter('resource', 0) === 'item') {
-			return [await executeItems(this, items, session, loadLists, loadLocale)];
+			return [await executeItems(this, items, await getSession(), loadLists, loadLocale)];
 		}
 
 		for (let i = 0; i < items.length; i++) {
 			try {
 				const operation = this.getNodeParameter('operation', i) as string;
 				const pairedItem = { item: i };
-				if (operation === 'getAll') {
+				if (this.getNodeParameter('resource', i) === 'catalog') {
+					let locale: string;
+					if (this.getNodeParameter('localeSource', i) === 'locale') {
+						locale = this.getNodeParameter('locale', i) as string;
+					} else {
+						const locator = this.getNodeParameter('list', i) as { mode: string; value: string };
+						locale = await loadLocale(
+							resolveListUuid(locator.mode === 'name' ? await loadLists() : [], locator),
+						);
+					}
+					for (const [key, name] of Object.entries(getCatalog(locale))) {
+						out.push({ json: { key, name, locale }, pairedItem });
+					}
+				} else if (operation === 'getAll') {
 					for (const l of await loadLists()) {
 						out.push({
 							json: { listUuid: l.listUuid, name: l.name, theme: l.theme },
@@ -209,13 +231,13 @@ export class Bring implements INodeType {
 					);
 					const response = (await bringRequest.call(
 						this,
-						session,
+						await getSession(),
 						'GET',
 						`v2/bringlists/${listUuid}`,
 					)) as Parameters<typeof mapListItems>[0];
 					let locale = locales.get(listUuid);
 					if (locale === undefined) {
-						locale = await getListLocale.call(this, session, listUuid);
+						locale = await getListLocale.call(this, await getSession(), listUuid);
 						locales.set(listUuid, locale);
 					}
 					const includeRecently = this.getNodeParameter('includeRecently', i, false) as boolean;

@@ -2,6 +2,7 @@ import type { IExecuteFunctions, INode } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { describe, expect, it, vi } from 'vitest';
 import { Bring } from '../nodes/Bring/Bring.node';
+import userSettings from './fixtures/user_settings_response.json';
 
 const node: INode = {
 	id: 'n1',
@@ -22,7 +23,13 @@ const fakeContext = (
 		continueOnFail = false,
 		listName,
 		failPutFor,
-	}: { continueOnFail?: boolean; listName?: string; failPutFor?: string } = {},
+		settings = { userlistsettings: [] },
+	}: {
+		continueOnFail?: boolean;
+		listName?: string;
+		failPutFor?: string;
+		settings?: unknown;
+	} = {},
 ) => {
 	const httpRequest = vi.fn(async (opts: { method: string; url: string }) => {
 		if (opts.method === 'PUT' && failPutFor && opts.url.includes(failPutFor))
@@ -33,7 +40,7 @@ const fakeContext = (
 			if (opts.url.endsWith('/v2/bringusers/u'))
 				return { userLocale: { language: 'en', country: 'US' } };
 			if (opts.url.endsWith('/bringusers/u/lists')) return LISTS;
-			if (opts.url.endsWith('/bringusersettings/u')) return { userlistsettings: [] };
+			if (opts.url.endsWith('/bringusersettings/u')) return settings;
 			return {};
 		})();
 		return { statusCode: 200, body };
@@ -56,7 +63,7 @@ const fakeContext = (
 		helpers: { httpRequest },
 	} as unknown as IExecuteFunctions;
 	const puts = () => httpRequest.mock.calls.map(([o]) => o).filter((o) => o.method === 'PUT');
-	return { context, puts };
+	return { context, puts, httpRequest };
 };
 
 describe('Bring.execute item', () => {
@@ -137,5 +144,46 @@ describe('Bring.execute item', () => {
 			const { context } = fakeContext(inputs, { failPutFor: 'list-b' });
 			await expect(new Bring().execute.call(context)).rejects.toThrow('boom');
 		});
+	});
+});
+
+describe('Bring.execute catalog', () => {
+	it('returns the catalog of a fixed locale without any HTTP call', async () => {
+		const { context, httpRequest } = fakeContext([
+			{ resource: 'catalog', operation: 'get', localeSource: 'locale', locale: 'fr-CH' },
+		]);
+
+		const [out] = await new Bring().execute.call(context);
+
+		expect(out).toHaveLength(385);
+		expect(out.map((o) => o.json)).toContainEqual({
+			key: 'Zwiebeln',
+			name: 'Oignons',
+			locale: 'fr-CH',
+		});
+		expect(out[0].pairedItem).toEqual({ item: 0 });
+		expect(httpRequest).not.toHaveBeenCalled();
+	});
+
+	it('takes the locale from the list article language', async () => {
+		const { context, httpRequest } = fakeContext(
+			[
+				{
+					resource: 'catalog',
+					operation: 'get',
+					localeSource: 'list',
+					list: { mode: 'id', value: '00000000-0000-0000-0000-000000000000' },
+				},
+			],
+			{ settings: userSettings },
+		);
+
+		const [out] = await new Bring().execute.call(context);
+
+		expect(out.length).toBeGreaterThan(0);
+		expect(out.every((o) => o.json.locale === 'de-DE')).toBe(true);
+		expect(
+			httpRequest.mock.calls.map(([o]) => o.url).some((u) => u.endsWith('/v2/bringauth')),
+		).toBe(true);
 	});
 });
