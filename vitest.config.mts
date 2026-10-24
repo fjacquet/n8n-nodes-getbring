@@ -6,5 +6,7 @@ export default defineConfig({
 	test: {
 		include: ['tests/**/*.test.ts'],
 		environment: 'node',
+		// Under node_modules so `n8n-node lint` (eslint) skips the generated report.
+		coverage: { reportsDirectory: 'node_modules/.coverage' },
 	},
 });
