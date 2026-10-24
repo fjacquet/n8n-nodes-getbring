@@ -1,6 +1,6 @@
 {
   "name": "@fjacquet/n8n-nodes-getbring",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "n8n community node for Bring! shopping lists (TypeScript port of miaucl/bring-api)",
   "license": "MIT",
   "homepage": "https://github.com/fjacquet/n8n-nodes-getbring",

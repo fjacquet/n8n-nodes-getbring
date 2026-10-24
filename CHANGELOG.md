@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 — 2026-10-24
+
+### Fixed
+
+- First release published from GitHub Actions with npm provenance (public access, Trusted Publishing). Same code as 0.1.0.
+
 ## 0.1.0 — 2026-10-24
 
 ### Added
