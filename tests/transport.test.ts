@@ -25,6 +25,8 @@ describe('bringLogin', () => {
 		const session = await bringLogin.call(ctx);
 
 		const first = httpRequest.mock.calls[0][0];
+		expect(first.returnFullResponse).toBe(true);
+		expect(first.ignoreHttpStatusErrors).toBe(true);
 		expect(first.method).toBe('POST');
 		expect(first.url).toBe('https://api.getbring.com/rest/v2/bringauth');
 		expect(first.body.toString()).toBe(`email=a%40b.ch&password=${PASSWORD}`);
@@ -102,5 +104,27 @@ describe('getListLocale', () => {
 	it('falls back to the user locale for an unknown list', async () => {
 		const { ctx } = fakeThis(ok(settings));
 		expect(await getListLocale.call(ctx, session, 'unknown')).toBe('fr-CH');
+	});
+});
+
+describe('network failures', () => {
+	const rawError = (config: object) =>
+		Object.assign(new Error('timeout of 1000ms exceeded'), { code: 'ECONNABORTED', config });
+
+	it('login: sanitized error without the password', async () => {
+		const { ctx, httpRequest } = fakeThis();
+		httpRequest.mockRejectedValueOnce(rawError({ data: `email=a&password=${PASSWORD}` }));
+		const error = await bringLogin.call(ctx).catch((e) => e);
+		expect(error.message).toBe('Bring request failed: ECONNABORTED');
+		expect(JSON.stringify(error)).not.toContain(PASSWORD);
+	});
+
+	it('other requests: sanitized error without the token', async () => {
+		const { ctx, httpRequest } = fakeThis();
+		httpRequest.mockRejectedValueOnce(rawError({ headers: { Authorization: 'Bearer TOKEN-xyz' } }));
+		const session = { uuid: 'u', publicUuid: 'p', userLocale: 'de-DE', headers: {} };
+		const error = await bringRequest.call(ctx, session, 'GET', 'v2/x').catch((e) => e);
+		expect(error.message).toBe('Bring request failed: ECONNABORTED');
+		expect(JSON.stringify(error)).not.toContain('TOKEN-xyz');
 	});
 });

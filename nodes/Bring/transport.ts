@@ -33,11 +33,20 @@ async function send(
 	options: Parameters<Ctx['helpers']['httpRequest']>[0],
 	messages: Record<number, string> = {},
 ): Promise<unknown> {
-	const { statusCode, body } = (await ctx.helpers.httpRequest({
-		...options,
-		returnFullResponse: true,
-		ignoreHttpStatusErrors: true,
-	})) as { statusCode: number; body: unknown };
+	let response: { statusCode: number; body: unknown };
+	try {
+		response = (await ctx.helpers.httpRequest({
+			...options,
+			returnFullResponse: true,
+			ignoreHttpStatusErrors: true,
+		})) as { statusCode: number; body: unknown };
+	} catch (error) {
+		// Raw transport errors carry the request config (password, bearer token): keep only the code.
+		const code = (error as { code?: unknown }).code;
+		const message = `Bring request failed: ${typeof code === 'string' ? code : 'network error'}`;
+		throw new NodeApiError(ctx.getNode(), { message } as JsonObject, { message });
+	}
+	const { statusCode, body } = response;
 	if (statusCode < 400) return body;
 	const bringMessage = (body as { message?: unknown } | undefined)?.message;
 	const message =
