@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 — 2026-10-26
+
+### Changed
+
+- Dependency refresh for open security advisories (dev dependencies only; no runtime change). eslint 10 and TypeScript 7 stay deferred: `@n8n/node-cli` does not support them yet.
+
 ## 0.1.1 — 2026-10-24
 
 ### Fixed
