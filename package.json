@@ -1,6 +1,6 @@
 {
   "name": "@fjacquet/n8n-nodes-getbring",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "n8n community node for Bring! shopping lists (TypeScript port of miaucl/bring-api)",
   "license": "MIT",
   "homepage": "https://github.com/fjacquet/n8n-nodes-getbring",
@@ -49,7 +49,7 @@
     ]
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.2",
+    "@biomejs/biome": "2.6.3",
     "@n8n/node-cli": "0.53.4",
     "@vitest/coverage-v8": "5.0.5",
     "eslint": "9.39.5",
