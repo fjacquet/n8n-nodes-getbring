@@ -15,7 +15,7 @@ This package is a TypeScript port of [miaucl/bring-api](https://github.com/miauc
 
 ## Requirements
 
-- n8n with community nodes enabled.
+- n8n with community nodes enabled, 2.x or 3.0 (see [n8n 3.0](#n8n-30) for the one setting to change).
 - Node.js 24 or later (set in `engines`).
 - A Bring! account with an email address and password.
 
@@ -32,6 +32,22 @@ Or, for a self-managed custom-nodes directory:
 ```bash
 npm install @fjacquet/n8n-nodes-getbring
 ```
+
+### n8n 3.0
+
+This package is not a verified community node. n8n 3.0 turns unverified community packages off by default: they can no longer be installed, and ones already installed stop loading after the upgrade. Turn them back on before upgrading (or right after) by setting one environment variable on the n8n container:
+
+```yaml
+# docker-compose.yml
+services:
+  n8n:
+    environment:
+      - N8N_UNVERIFIED_PACKAGES_ENABLED=true
+```
+
+or `docker run -e N8N_UNVERIFIED_PACKAGES_ENABLED=true …`, then restart n8n. Credentials and workflows are untouched; nothing else needs to change.
+
+The package itself needs no update for 3.0. It was checked against the 3.0 release candidate (`n8n-workflow` 3.0.1, `@n8n/node-cli` 1.0.1): it builds, lints and passes its tests. The same release works on n8n 2.x and 3.0. See the [n8n 3.0 breaking changes](https://docs.n8n.io/changelog/v30-breaking-changes) for the rest of the upgrade (n8n 3.0 runs in Docker only).
 
 ## Credential setup
 
