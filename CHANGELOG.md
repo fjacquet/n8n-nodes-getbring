@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- README documents n8n 3.0: the node works unchanged (checked against the 3.0.1 release candidate), but n8n 3.0 disables unverified community packages by default, so `N8N_UNVERIFIED_PACKAGES_ENABLED=true` must be set on the n8n container.
+
 ## 0.1.2 — 2026-10-26
 
 ### Changed
