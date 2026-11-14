@@ -49,13 +49,13 @@
     ]
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.3",
-    "@n8n/node-cli": "0.53.4",
-    "@vitest/coverage-v8": "5.0.5",
+    "@biomejs/biome": "2.6.7",
+    "@n8n/node-cli": "0.56.4",
+    "@vitest/coverage-v8": "5.1.0",
     "eslint": "9.39.5",
-    "release-it": "21.1.1",
+    "release-it": "21.1.2",
     "typescript": "6.0.3",
-    "vitest": "5.0.5"
+    "vitest": "5.1.0"
   },
   "peerDependencies": {
     "n8n-workflow": "*"

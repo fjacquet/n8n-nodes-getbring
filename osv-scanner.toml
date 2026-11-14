@@ -4,7 +4,7 @@
 
 [[PackageOverrides]]
 name = "qs"
-version = "6.15.2"
+version = "6.16.0"
 ecosystem = "npm"
 vulnerability.ignore = true
 effectiveUntil = 2026-12-31
@@ -25,22 +25,6 @@ ecosystem = "npm"
 vulnerability.ignore = true
 effectiveUntil = 2026-12-31
 reason = "Dev-only, required ^10 by @langchain/classic and @langchain/community (via @n8n/node-cli); not shipped"
-
-[[PackageOverrides]]
-name = "handlebars"
-version = "4.7.9"
-ecosystem = "npm"
-vulnerability.ignore = true
-effectiveUntil = 2026-12-31
-reason = "pinned exactly by @n8n/node-cli 0.53.4; dev-only, not shipped; remove when pin is bumped upstream"
-
-[[PackageOverrides]]
-name = "undici"
-version = "7.29.1"
-ecosystem = "npm"
-vulnerability.ignore = true
-effectiveUntil = 2026-12-31
-reason = "pinned by release-it 21.1.1; dev-only, not shipped; remove when pin is bumped upstream"
 
 [[PackageOverrides]]
 name = "basic-ftp"
